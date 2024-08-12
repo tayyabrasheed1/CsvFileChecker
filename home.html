@@ -1,0 +1,109 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Validator</title>
+    <style>
+        
+
+        .error-table {
+            margin-top: 20px;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        .error-table th, .error-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .error-table th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="upload-container">
+        <h1>Upload a CSV File</h1>
+        <input type="file" id="csvFile" accept=".csv">
+        <button class="upload-button" onclick="validateCSV()">Upload</button>
+        <p id="error-message" style="color: red;"></p>
+        <table class="error-table" id="error-table">
+            <thead>
+                <tr>
+                    <th>Row</th>
+                    <th>Column</th>
+                    <th>Invalid Value</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script>
+        function validateCSV() {
+            const fileInput = document.getElementById('csvFile');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                document.getElementById('error-message').textContent = 'Please select a CSV file.';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const csvContent = event.target.result;
+                const lines = csvContent.split('\n');
+                const errorRows = [];
+
+                for (let i = 0; i < lines.length; i++) {
+                    const values = lines[i].split(',');
+                    for (let j = 0; j < values.length; j++) {
+                        const trimmedValue = values[j].trim();
+                        if (trimmedValue === '') {
+                            continue;
+                        }
+                        const num = parseInt(trimmedValue);
+                        if (isNaN(num) || num < 1 || num > 40) {
+                            errorRows.push({ row: i + 1, column: j + 1, value: trimmedValue });
+                        }
+                    }
+                }
+
+
+                let lastNonEmptyRow = lines.length;
+                for (let i = lines.length - 1; i >= 0; i--) {
+                    if (lines[i].trim() !== '') {
+                        lastNonEmptyRow = i + 1;
+                        break;
+                    }
+                }
+
+                if (errorRows.length > 0) {
+                    const errorTable = document.getElementById('error-table').getElementsByTagName('tbody')[0];
+                    errorTable.innerHTML = '';
+                    for (const error of errorRows) {
+                        const row = errorTable.insertRow();
+                        const cell1 = row.insertCell(0);
+                        const cell2 = row.insertCell(1);
+                        const cell3 = row.insertCell(2);
+                        cell1.textContent = error.row;
+                        cell2.textContent = error.column;
+                        cell3.textContent = error.value;
+                    }
+                    document.getElementById('error-message').textContent = 'CSV contains invalid values.';
+                } else {
+                    document.getElementById('error-message').textContent = ''; 
+                    alert(`CSV file is valid! Data ends at row ${lastNonEmptyRow}.`);
+                }
+            };
+
+            reader.readAsText(file);
+        }
+    </script>
+    
+</body>
+</html>
